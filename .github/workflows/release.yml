@@ -1,0 +1,117 @@
+name: Release
+
+# 正式包只在打 tag 时构建，push 到 main 只跑 build.yml 的 debug 流水线。
+# 触发方式：git tag v0.7.4-melody.1 && git push origin v0.7.4-melody.1
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # assembleRelease 会读 git HEAD 写进 BuildConfig，浅克隆也够用。
+          fetch-depth: 1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools"
+
+      - name: Test USB packet scheduler
+        run: |
+          g++ -std=c++17 -pthread -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+            android/app/src/test/cpp/usb_audio_test.cpp -o "$RUNNER_TEMP/melox-usb-audio-test"
+          "$RUNNER_TEMP/melox-usb-audio-test"
+
+      # release 变体开了 R8 + resource shrinking，第一次跑要全量编译 native，
+      # 比 debug 慢一截，这里的日志同样以 release 资产形式回传方便排查。
+      - name: Build release APK
+        run: |
+          set -o pipefail
+          chmod +x android/gradlew
+          cd android
+          ./gradlew :app:assembleRelease --no-daemon --max-workers=2 --console=plain --stacktrace \
+            -PmeloxReleaseStoreFile=signing/melody-release.p12 \
+            -PmeloxReleaseStorePassword="$RELEASE_STORE_PASSWORD" \
+            -PmeloxReleaseKeyAlias=melody \
+            -PmeloxReleaseKeyPassword="$RELEASE_STORE_PASSWORD" \
+            2>&1 | tee "$RUNNER_TEMP/build.log"
+        env:
+          RELEASE_STORE_PASSWORD: MelodyFork2026Sign
+
+      - name: Verify signature
+        run: |
+          APK=android/app/build/outputs/apk/release/app-arm64-v8a-release.apk
+          BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK" | head -20
+
+      - name: Publish build failure log
+        if: failure() && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LOG="$RUNNER_TEMP/build.log"
+          [ -f "$LOG" ] || echo "no gradle log was produced" > "$LOG"
+          gh release view dev-latest --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 \
+            || gh release create dev-latest --repo "${GITHUB_REPOSITORY}" \
+                 --prerelease --title "Development build" --notes "Rolling build."
+          gh release upload dev-latest "$LOG" --clobber --repo "${GITHUB_REPOSITORY}"
+
+      - name: Prepare assets
+        if: success()
+        run: |
+          VERSION=$(grep -m1 'versionName = ' android/app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          SRC=android/app/build/outputs/apk/release
+          mkdir -p /tmp/out
+          cp "$SRC/app-arm64-v8a-release.apk"   "/tmp/out/MeloX-Melody-$VERSION-arm64-v8a.apk"
+          cp "$SRC/app-armeabi-v7a-release.apk" "/tmp/out/MeloX-Melody-$VERSION-armeabi-v7a.apk"
+          ls -la /tmp/out
+
+      - name: Create GitHub release
+        if: success() && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if gh release view "$TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "$TAG" /tmp/out/*.apk --clobber --repo "${GITHUB_REPOSITORY}"
+          else
+            gh release create "$TAG" /tmp/out/*.apk \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "$TAG" \
+              --notes-file .github/release-notes.md
+          fi
+
+      - name: Upload APKs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeloX-Melody-release
+          path: /tmp/out/*.apk
+          if-no-files-found: error
+          retention-days: 30
