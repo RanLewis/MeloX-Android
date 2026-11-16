@@ -9,6 +9,7 @@ import com.lladlam.melox.core.music.model.MusicAlbumSummary
 import com.lladlam.melox.core.music.model.MusicArtistDetail
 import com.lladlam.melox.core.music.model.MusicArtistSummary
 import com.lladlam.melox.core.music.model.MusicAuthenticationState
+import com.lladlam.melox.core.music.model.MusicHomeFeed
 import com.lladlam.melox.core.music.model.MusicPage
 import com.lladlam.melox.core.music.model.MusicPlaylistDetail
 import com.lladlam.melox.core.music.model.MusicPlaylistSummary
@@ -22,6 +23,7 @@ import com.lladlam.melox.core.music.provider.AuthenticationCapability
 import com.lladlam.melox.core.music.provider.CatalogSearchCapability
 import com.lladlam.melox.core.music.provider.DownloadCapability
 import com.lladlam.melox.core.music.provider.FavoriteStateCapability
+import com.lladlam.melox.core.music.provider.HomeFeedCapability
 import com.lladlam.melox.core.music.provider.LyricsCapability
 import com.lladlam.melox.core.music.provider.MusicCapability
 import com.lladlam.melox.core.music.provider.MusicProvider
@@ -61,6 +63,7 @@ class LewisMelodyProvider(
     ArtistCapability,
     FavoriteStateCapability,
     UserLibraryCapability,
+    HomeFeedCapability,
     AuthenticationCapability {
 
     override val source: MusicSource = MusicSource.Lewis
@@ -76,11 +79,42 @@ class LewisMelodyProvider(
         MusicCapability.Albums,
         MusicCapability.Artists,
         MusicCapability.Favorites,
+        MusicCapability.HomeRecommendations,
         MusicCapability.Authentication,
     )
 
     private val appContext = context.applicationContext
     private val client = LewisMelodyClient(appContext, httpClient)
+
+    // ---- 首页 ----------------------------------------------------------------
+
+    /**
+     * 后端没有推荐接口，所以首页只用两样真实存在的数据：
+     *   - 「每日推荐」放**我的歌单**（`/playlist/user`），标题沿用宿主的固定文案；
+     *   - 「为你推荐」放**我喜欢**里最近加入的若干首（`/song/like` + `/song/batch/detail`）。
+     *
+     * 两段都各自吞异常：没登录或后端抽风时首页只是少一块，不该整页报错。
+     */
+    override suspend fun homeFeed(
+        playlistLimit: Int,
+        newSongLimit: Int,
+        rankingLimit: Int,
+    ): MusicHomeFeed = io {
+        val playlists = runCatching {
+            LewisMelodyMapper.playlists(client.userPlaylists())
+        }.getOrElse { emptyList() }
+
+        val liked = runCatching {
+            // 接口按「最近加入」倒序，取前几首就是最贴近当下的口味。
+            val ids = client.likedIds().take(newSongLimit.coerceIn(1, 50))
+            if (ids.isEmpty()) emptyList() else LewisMelodyMapper.tracks(client.songDetail(ids))
+        }.getOrElse { emptyList() }
+
+        MusicHomeFeed(
+            recommendedPlaylists = playlists.take(playlistLimit.coerceIn(1, 30)),
+            newSongs = liked,
+        )
+    }
 
     // ---- 搜索 ----------------------------------------------------------------
 

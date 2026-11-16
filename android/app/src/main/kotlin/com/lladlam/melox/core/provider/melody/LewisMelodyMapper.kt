@@ -27,11 +27,27 @@ import java.util.Locale
  * 这里只做一次翻译，UI 与播放链路不再看到平台字段。
  */
 internal object LewisMelodyMapper {
+    /**
+     * 后端库里的封面地址是网易原样存的，绝大多数是 `http://p1.music.126.net/...`。
+     * App 的 network-security-config 全局禁明文，Coil 拿到这种地址会静默失败 ——
+     * 表现就是「歌单有名字、没有图」。网易图床同时支持 https，这里统一升级协议；
+     * 其它协议（已经 https 的、或将来换 CDN）原样返回。
+     */
+    private fun String?.asArtworkUrl(): String? {
+        val value = this?.trim().orEmpty()
+        if (value.isEmpty()) return null
+        return if (value.startsWith("http://", ignoreCase = true)) {
+            "https://" + value.substring("http://".length)
+        } else {
+            value
+        }
+    }
+
     /** 歌曲在专辑里的曲目序号，用于同专辑多版本排序时区分。 */
     fun track(song: JSONObject): MusicTrack? {
         val numericId = song.longOrNull("id") ?: return null
         val albumObject = song.obj("album")
-        val artwork = albumObject?.str("picUrl")?.takeIf { it.isNotBlank() }
+        val artwork = albumObject?.str("picUrl").asArtworkUrl()
         val albumName = albumObject?.str("name").orEmpty()
 
         val artistArray = song.array("artist") ?: song.array("artists")
@@ -89,7 +105,7 @@ internal object LewisMelodyMapper {
         return MusicAlbumSummary(
             id = MusicResourceId(MusicSource.Lewis, id.toString()),
             title = album.str("name").ifBlank { "未知专辑" },
-            artworkUrl = album.str("picUrl").takeIf { it.isNotBlank() },
+            artworkUrl = album.str("picUrl").asArtworkUrl(),
             artists = artists,
             releaseDate = album.longOrNull("publishTime")?.let(::formatDate),
             trackCount = album.longOrNull("size"),
@@ -101,7 +117,7 @@ internal object LewisMelodyMapper {
         return MusicArtistSummary(
             id = MusicResourceId(MusicSource.Lewis, id.toString()),
             name = artist.str("name").ifBlank { "未知歌手" },
-            artworkUrl = artist.str("picUrl").ifBlank { artist.str("img1v1Url") }.takeIf { it.isNotBlank() },
+            artworkUrl = (artist.str("picUrl").ifBlank { artist.str("img1v1Url") }).asArtworkUrl(),
             description = artist.str("briefDesc").takeIf { it.isNotBlank() },
             songCount = artist.longOrNull("musicSize"),
             albumCount = artist.longOrNull("albumSize"),
@@ -110,14 +126,18 @@ internal object LewisMelodyMapper {
 
     fun playlist(playlist: JSONObject): MusicPlaylistSummary? {
         val id = playlist.longOrNull("id") ?: return null
+        // 列表接口（/playlist/user）只带 meta + trackCount；详情接口带 trackIds/tracks。
+        // 三处都试，是为了让同一个 mapper 在两种载荷下都给出正确数量，而不是一个 0。
+        val trackCount = playlist.intOrNull("trackCount")
+            ?: playlist.array("trackIds")?.length()
+            ?: playlist.array("tracks")?.length()
         return MusicPlaylistSummary(
             id = MusicResourceId(MusicSource.Lewis, id.toString()),
             title = playlist.str("name").ifBlank { "未命名歌单" },
-            artworkUrl = playlist.str("coverImgUrl").takeIf { it.isNotBlank() },
+            artworkUrl = playlist.str("coverImgUrl").asArtworkUrl(),
             creatorName = playlist.str("creator").takeIf { it.isNotBlank() },
             description = playlist.str("description").takeIf { it.isNotBlank() },
-            trackCount = playlist.array("trackIds")?.length()?.takeIf { it > 0 }
-                ?: playlist.array("tracks")?.length()?.takeIf { it > 0 },
+            trackCount = trackCount,
         )
     }
 

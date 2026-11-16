@@ -171,6 +171,10 @@ import com.lladlam.melox.ui.meloXPageRecede
 import com.lladlam.melox.ui.layout.rememberMeloXStableStatusBarHeight
 import com.lladlam.melox.ui.layout.rememberMeloXWindowInfo
 import kotlinx.coroutines.CancellationException
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -1208,11 +1212,9 @@ private fun MeloXHomeLayout(
                 }
                 if (!sonifyAppearance) {
                     item {
-                        Text(
-                            text = stringResource(R.string.home_greeting),
+                        HomeGreetingHeader(
+                            account = account,
                             modifier = Modifier.padding(horizontal = 20.dp),
-                            style = MeloXTypography.headline,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.58f),
                         )
                     }
                 }
@@ -1273,6 +1275,39 @@ private fun MeloXHomeLayout(
                 error?.let { message -> item { Text(message, Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error, fontSize = 13.sp) } }
             }
         }
+    }
+}
+
+@Composable
+private fun HomeGreetingHeader(account: HomeAccountUi?, modifier: Modifier = Modifier) {
+    val now = remember { Date() }
+    val dateText = remember(now) { SimpleDateFormat("EEEE, MMMM d", Locale.US).format(now) }
+    val greeting = remember(now) {
+        when (Calendar.getInstance().apply { time = now }.get(Calendar.HOUR_OF_DAY)) {
+            in 5..11 -> "Good morning"
+            in 12..17 -> "Good afternoon"
+            in 18..22 -> "Good evening"
+            else -> "Good night"
+        }
+    }
+    // 没有账号时不留一个「Good night, 」的悬空逗号。
+    val name = account?.name?.trim()?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = dateText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = 0.2.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f),
+        )
+        Text(
+            text = if (name == null) greeting else "$greeting, $name",
+            fontSize = 30.sp,
+            lineHeight = 37.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-0.8).sp,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }
 

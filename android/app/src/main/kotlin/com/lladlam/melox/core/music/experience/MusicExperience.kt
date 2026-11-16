@@ -187,14 +187,18 @@ object MusicExperiences {
             MusicCapability.Lyrics, MusicCapability.HomeRecommendations, MusicCapability.Library, MusicCapability.Playlists),
     )
 
-    /** 自建后端只有搜索/歌单/收藏，没有榜单与推荐出口，所以首页分区留空。 */
+    /** 后端没有榜单/推荐出口：首页只放「我的歌单」与「我喜欢」，其余分区留空。 */
     val lewis = MusicExperience(
         source = MusicSource.Lewis,
-        homeSections = emptyList(),
+        homeSections = listOf(
+            HomeSectionKind.Playlists,
+            HomeSectionKind.NewSongs,
+        ),
         providerNativeCapabilities = setOf(
             MusicCapability.Search,
             MusicCapability.Playback,
             MusicCapability.Lyrics,
+            MusicCapability.HomeRecommendations,
             MusicCapability.Library,
             MusicCapability.Playlists,
             MusicCapability.Albums,
