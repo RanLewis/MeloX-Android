@@ -17,7 +17,7 @@ import java.io.IOException
 internal class LewisMelodyAuthException(message: String) : IOException(message)
 
 /**
- * 后端 `/api/melody/**` + `/api/auth/login` 的最小同步客户端。
+ * 后端 melody 接口（搜索 / 歌曲 / 歌词 / 歌单 / 专辑 / 歌手 / 账号）与 /api/auth/login 的最小同步客户端。
  *
  * 三条约定决定这里的写法：
  *   1. 信封是 `{ code, data, message }`，且 `code` 就是 HTTP 状态码（后端 result.ts），
