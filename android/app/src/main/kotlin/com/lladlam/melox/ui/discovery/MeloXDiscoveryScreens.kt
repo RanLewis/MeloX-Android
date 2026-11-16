@@ -1031,7 +1031,15 @@ private fun ProviderHomeDataScreen(source: MusicSource, onOpenTool: (String) -> 
                 add(HomeBlock.Collections("每日推荐", source.displayName, value.recommendedPlaylists.map { DiscoveryCollection.ProviderPlaylist(it) }))
             }
             if (value.newSongs.isNotEmpty()) {
-                add(HomeBlock.Tracks(stringResource(R.string.home_for_you), stringResource(R.string.home_new_songs), value.newSongs.map { DiscoveryTrack.Provider(it) }))
+                // 网易系之外的新歌区由各 provider 自己填：Melody 填的是「我喜欢」里最近加入的，
+                // 写死 "New songs" 会撒谎，所以按音源给一句对得上的说明。
+                add(
+                    HomeBlock.Tracks(
+                        stringResource(R.string.home_for_you),
+                        if (source == MusicSource.Lewis) "最近喜欢" else stringResource(R.string.home_new_songs),
+                        value.newSongs.map { DiscoveryTrack.Provider(it) },
+                    ),
+                )
             }
             if (provider is RankingCapability && value.rankings.isNotEmpty()) {
                 add(HomeBlock.Collections("排行榜", source.displayName, value.rankings.map { DiscoveryCollection.ProviderRanking(it) }))
