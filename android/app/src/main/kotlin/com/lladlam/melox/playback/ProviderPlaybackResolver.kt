@@ -347,6 +347,7 @@ class ProviderPlaybackResolver(
         MusicSource.YouTubeMusic -> ProviderTrackMetadata.Empty
         MusicSource.Qishui -> ProviderTrackMetadata.Empty
         MusicSource.Jellyfin -> ProviderTrackMetadata.Empty
+        MusicSource.Lewis -> ProviderTrackMetadata.Empty
         MusicSource.Local -> ProviderTrackMetadata.Local(
             contentUri = uri.getQueryParameter("localContentUri").orEmpty(),
             fileKey = id.value,

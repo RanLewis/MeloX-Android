@@ -184,6 +184,7 @@ object MeloXUnifiedFavorites {
 
     private suspend fun loadFavorites(context: Context, source: MusicSource): List<MusicTrack> = when (source) {
         MusicSource.Netease -> loadNeteaseFavorites(context)
+        MusicSource.Lewis -> com.lladlam.melox.core.provider.melody.lewisLikedTracks(context)
         MusicSource.Local -> LocalMusicRepository(context).tracks()
             .filter { it.isFavorite }
             .map(::fromLocal)

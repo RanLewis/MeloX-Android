@@ -47,7 +47,7 @@ data class LyricAccompaniment(
     val timingKind: LyricTimingKind = LyricTimingKind.Precise,
 )
 
-enum class LyricSource { Netease, QQMusic, Kugou, AppleMusic, AmlL, Local }
+enum class LyricSource { Netease, QQMusic, Kugou, AppleMusic, AmlL, Lewis, Local }
 
 enum class LyricQuality { Fallback, LineSynchronized, WordSynchronized, Authored }
 

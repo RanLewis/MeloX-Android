@@ -2988,6 +2988,7 @@ class MeloXPlaybackService : MediaSessionService(), MeloXLanHost {
                 )
                 MusicSource.Jellyfin -> ProviderTrackMetadata.Empty
                 MusicSource.Qishui -> ProviderTrackMetadata.Empty
+                MusicSource.Lewis -> ProviderTrackMetadata.Empty
                 MusicSource.KugouLite -> ProviderTrackMetadata.Kugou(hash = identity.value)
                 null -> ProviderTrackMetadata.Empty
             },

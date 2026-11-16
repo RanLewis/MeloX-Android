@@ -70,6 +70,7 @@ object SpotifyTrackMatcher {
         MusicSource.Jellyfin -> 0
         MusicSource.Local -> 0
         MusicSource.Qishui -> 0
+        MusicSource.Lewis -> 0
         null -> 0
     }
 }

@@ -2,6 +2,7 @@ package com.lladlam.melox.core.music.provider
 
 import android.content.Context
 import com.lladlam.melox.core.account.NeteaseSessionStore
+import com.lladlam.melox.core.provider.melody.LewisMelodySessionStore
 import com.lladlam.melox.core.music.model.MusicSource
 import com.lladlam.melox.core.provider.applemusic.AppleMusicSessionStore
 import com.lladlam.melox.core.provider.kugou.KugouSessionStore
@@ -95,6 +96,13 @@ class ProviderAccountManager(
         MusicSource.Jellyfin -> JellyfinSessionStore.read(appContext).let { session ->
             AccountState(source, session.isLoggedIn, session.userName.takeIf(String::isNotBlank))
         }
+        MusicSource.Lewis -> LewisMelodySessionStore.read(appContext).let { session ->
+            AccountState(
+                source = source,
+                loggedIn = session.isLoggedIn,
+                accountId = session.accountId.takeIf(String::isNotBlank),
+            )
+        }
         MusicSource.Local -> AccountState(source = source, loggedIn = true, accountId = "local")
         MusicSource.Qishui -> QishuiSessionStore.read(appContext).let { session ->
             AccountState(source, session.isLoggedIn, session.userId.takeIf(String::isNotBlank))
@@ -132,6 +140,7 @@ class ProviderAccountManager(
             }
             MusicSource.YouTubeMusic -> YouTubeSessionStore.clear(appContext)
             MusicSource.Jellyfin -> JellyfinSessionStore.clear(appContext)
+            MusicSource.Lewis -> LewisMelodySessionStore.clear(appContext)
             MusicSource.Local -> Unit
             MusicSource.Qishui -> QishuiSessionStore.clear(appContext)
         }

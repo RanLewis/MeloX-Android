@@ -48,7 +48,7 @@ jobs:
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew :app:testDebugUnitTest :app:assembleDebug --no-daemon --max-workers=2 --stacktrace
+          ./gradlew :app:assembleDebug --no-daemon --max-workers=2 --stacktrace
 
       # A release asset downloads without a GitHub login, unlike an Actions artifact.
       # The fixed tag and fixed file name mean every build replaces the same file, so

@@ -38,6 +38,7 @@ import com.lladlam.melox.core.provider.kugou.KugouLiteProvider
 import com.lladlam.melox.core.provider.kugou.KugouSessionStore
 import com.lladlam.melox.ui.account.KugouLoginScreen
 import com.lladlam.melox.ui.account.KuwoLoginScreen
+import com.lladlam.melox.ui.account.LewisMelodyLoginScreen
 import com.lladlam.melox.ui.account.QQMusicLoginScreen
 import com.lladlam.melox.ui.account.AppleMusicLoginScreen
 import com.lladlam.melox.ui.account.BilibiliLoginScreen
@@ -94,6 +95,7 @@ fun ProviderSettingsHub(
     var showBilibiliLogin by remember(currentSource) { mutableStateOf(false) }
     var showSpotifyLogin by remember(currentSource) { mutableStateOf(false) }
     var showYouTubeLogin by remember(currentSource) { mutableStateOf(false) }
+    var showLewisLogin by remember(currentSource) { mutableStateOf(false) }
     var loginRevision by remember(currentSource) { mutableStateOf(0) }
     var pendingAccountAction by remember { mutableStateOf<PendingProviderAccountAction?>(null) }
     var showLiteVipClaim by remember { mutableStateOf(false) }
@@ -176,6 +178,13 @@ fun ProviderSettingsHub(
         YouTubeLoginScreen(
             onDismiss = { showYouTubeLogin = false },
             onLoggedIn = { showYouTubeLogin = false; loginRevision += 1 },
+        )
+        return
+    }
+    if (showLewisLogin && currentSource == MusicSource.Lewis) {
+        LewisMelodyLoginScreen(
+            onDismiss = { showLewisLogin = false },
+            onLoggedIn = { showLewisLogin = false; loginRevision += 1 },
         )
         return
     }
@@ -262,6 +271,7 @@ fun ProviderSettingsHub(
                                      MusicSource.Spotify -> showSpotifyLogin = true
                                      MusicSource.YouTubeMusic -> showYouTubeLogin = true
                                      MusicSource.Jellyfin -> Unit
+                                    MusicSource.Lewis -> showLewisLogin = true
                                     MusicSource.Local -> Unit
                                 }
                             }
@@ -295,6 +305,7 @@ fun ProviderSettingsHub(
                                 MusicSource.Spotify -> stringResource(R.string.provider_switch_spotify)
                                 MusicSource.YouTubeMusic -> stringResource(R.string.provider_switch_youtube)
                                 MusicSource.Jellyfin -> stringResource(R.string.provider_switch_jellyfin)
+                                MusicSource.Lewis -> "清除本机保存的 API 令牌，重新输入面板口令登录"
                                 MusicSource.Local -> stringResource(R.string.provider_switch_local)
                                 MusicSource.Qishui -> "清除汽水音乐登录状态后，使用抖音重新扫码"
                             },
@@ -427,6 +438,7 @@ fun ProviderSettingsHub(
                                 MusicSource.Spotify -> showSpotifyLogin = true
                                 MusicSource.YouTubeMusic -> showYouTubeLogin = true
                                 MusicSource.Jellyfin -> Unit
+                                MusicSource.Lewis -> showLewisLogin = true
                                 MusicSource.Local -> Unit
                             }
                         }

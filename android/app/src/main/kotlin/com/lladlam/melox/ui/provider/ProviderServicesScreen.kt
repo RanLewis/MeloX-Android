@@ -58,6 +58,7 @@ import com.lladlam.melox.core.provider.local.LocalScanRoot
 import com.lladlam.melox.ui.MeloXBottomContentClearance
 import com.lladlam.melox.ui.account.KugouLoginScreen
 import com.lladlam.melox.ui.account.KuwoLoginScreen
+import com.lladlam.melox.ui.account.LewisMelodyLoginScreen
 import com.lladlam.melox.ui.account.QQMusicLoginScreen
 import com.lladlam.melox.ui.account.AppleMusicLoginScreen
 import com.lladlam.melox.ui.account.BilibiliLoginScreen
@@ -105,6 +106,7 @@ fun ProviderServicesScreen(
     var showBilibiliLogin by remember(currentSource) { mutableStateOf(false) }
     var showSpotifyLogin by remember(currentSource) { mutableStateOf(false) }
     var showYouTubeLogin by remember(currentSource) { mutableStateOf(false) }
+    var showLewisLogin by remember(currentSource) { mutableStateOf(false) }
     var loginRevision by remember(currentSource) { mutableStateOf(0) }
     var pendingAction by remember { mutableStateOf<Pair<MusicSource, ServicesAccountAction>?>(null) }
     var unifiedEnabled by remember { mutableStateOf(MusicProviderSelectionStore.unifiedEnabled(context)) }
@@ -261,6 +263,13 @@ fun ProviderServicesScreen(
         )
         return
     }
+    if (showLewisLogin && currentSource == MusicSource.Lewis) {
+        LewisMelodyLoginScreen(
+            onDismiss = { showLewisLogin = false },
+            onLoggedIn = { showLewisLogin = false; loginRevision++ },
+        )
+        return
+    }
 
     val currentAccount = remember(loginRevision, currentSource) {
         accountManager.state(currentSource)
@@ -338,6 +347,7 @@ fun ProviderServicesScreen(
                             MusicSource.Spotify -> showSpotifyLogin = true
                             MusicSource.YouTubeMusic -> showYouTubeLogin = true
                             MusicSource.Jellyfin -> { jellyfinError = null; showJellyfinDialog = true }
+                            MusicSource.Lewis -> showLewisLogin = true
                             MusicSource.Local -> Unit
                         }
                     }
@@ -563,6 +573,7 @@ fun ProviderServicesScreen(
                                     jellyfinPassword = ""
                                     showJellyfinDialog = true
                                 }
+                                MusicSource.Lewis -> showLewisLogin = true
                                 MusicSource.Local -> Unit
                             }
                         }

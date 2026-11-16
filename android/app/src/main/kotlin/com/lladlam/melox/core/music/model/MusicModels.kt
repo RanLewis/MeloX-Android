@@ -16,6 +16,8 @@ enum class MusicSource(
     YouTubeMusic("youtube_music", "YouTube Music"),
     Jellyfin("jellyfin", "Jellyfin"),
     Qishui("qishui", "汽水音乐"),
+    /** 自建 melody 后端：原生音源，不是插件通道。 */
+    Lewis("lewis", "Melody"),
     Local("local", "本地音乐");
 
     companion object {

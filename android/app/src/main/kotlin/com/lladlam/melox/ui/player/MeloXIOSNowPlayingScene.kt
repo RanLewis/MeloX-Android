@@ -2100,7 +2100,9 @@ private fun rememberTrackFavorite(state: MeloXPlaybackUiState): MeloXTrackFavori
                         contentUri = LocalMusicRepository(app).track(id.value)?.contentUri.orEmpty(),
                         fileKey = id.value,
                     )
-                    MusicSource.Jellyfin, MusicSource.Qishui -> ProviderTrackMetadata.Empty
+                    MusicSource.Jellyfin, MusicSource.Qishui,
+                    MusicSource.Lewis,
+                    -> ProviderTrackMetadata.Empty
                     null -> ProviderTrackMetadata.Empty
                 },
             )

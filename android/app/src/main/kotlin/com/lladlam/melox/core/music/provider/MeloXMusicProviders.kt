@@ -9,6 +9,7 @@ import com.lladlam.melox.core.provider.kugou.KugouProvider
 import com.lladlam.melox.core.provider.kugou.KugouSessionStore
 import com.lladlam.melox.core.provider.kuwo.KuwoProvider
 import com.lladlam.melox.core.provider.kuwo.KuwoSessionStore
+import com.lladlam.melox.core.provider.melody.LewisMelodyProvider
 import com.lladlam.melox.core.provider.netease.NeteaseProvider
 import com.lladlam.melox.core.provider.qqmusic.QQMusicProvider
 import com.lladlam.melox.core.provider.qqmusic.QQMusicSessionStore
@@ -67,6 +68,8 @@ object MeloXMusicProviders {
                     { BilibiliDirectedTrafficPolicy.isActive(appContext) },
                 ),
                 JellyfinProvider({ JellyfinSessionStore.read(appContext) }, httpClient),
+                // 自建 melody 后端：原生音源，不经过插件沙箱。
+                LewisMelodyProvider(appContext, httpClient),
                 LocalProvider(appContext),
                 YouTubeMusicProvider(appContext, httpClient),
         )
@@ -127,6 +130,7 @@ object MeloXMusicProviders {
                     directedTrafficProvider = { BilibiliDirectedTrafficPolicy.isActive(context) },
                 ),
                 JellyfinProvider({ JellyfinSessionStore.read(context) }, httpClient),
+                LewisMelodyProvider(context, httpClient),
                 LocalProvider(context),
                 YouTubeMusicProvider(context, httpClient),
         )

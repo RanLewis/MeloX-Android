@@ -684,6 +684,8 @@ private fun shareProviderSong(
         MusicSource.YouTubeMusic -> "https://music.youtube.com/watch?v=${identity.value}"
         MusicSource.Qishui -> "https://music.douyin.com/qishui/song/${identity.value}"
         MusicSource.Jellyfin -> null
+        // 自建后端没有对外分享页，分享文本里只保留标题/歌手。
+        MusicSource.Lewis -> null
         MusicSource.Local -> null
         null -> null
     }

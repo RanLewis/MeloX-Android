@@ -66,6 +66,8 @@ object ProviderPlaybackRuntime {
             MusicSource.Jellyfin -> com.lladlam.melox.core.provider.jellyfin.JellyfinSessionStore.read(context).let { session ->
                 listOf(session.serverUrl, session.accessToken, session.userId).joinToString("|")
             }
+            MusicSource.Lewis -> com.lladlam.melox.core.provider.melody.LewisMelodySessionStore
+                .read(context).let { listOf(it.baseUrl, it.token).joinToString("|") }
             MusicSource.Local -> "local"
             MusicSource.Qishui -> com.lladlam.melox.core.provider.qishui.QishuiSessionStore.read(context).sessionId
         }

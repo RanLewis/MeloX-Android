@@ -187,6 +187,22 @@ object MusicExperiences {
             MusicCapability.Lyrics, MusicCapability.HomeRecommendations, MusicCapability.Library, MusicCapability.Playlists),
     )
 
+    /** 自建后端只有搜索/歌单/收藏，没有榜单与推荐出口，所以首页分区留空。 */
+    val lewis = MusicExperience(
+        source = MusicSource.Lewis,
+        homeSections = emptyList(),
+        providerNativeCapabilities = setOf(
+            MusicCapability.Search,
+            MusicCapability.Playback,
+            MusicCapability.Lyrics,
+            MusicCapability.Library,
+            MusicCapability.Playlists,
+            MusicCapability.Albums,
+            MusicCapability.Artists,
+            MusicCapability.Favorites,
+        ),
+    )
+
     fun forSource(source: MusicSource): MusicExperience = when (source) {
         MusicSource.Netease -> netease
         MusicSource.QQMusic -> qqMusic
@@ -200,5 +216,6 @@ object MusicExperiences {
         MusicSource.Jellyfin -> jellyfin
         MusicSource.Local -> local
         MusicSource.Qishui -> qishui
+        MusicSource.Lewis -> lewis
     }
 }

@@ -186,6 +186,14 @@ android {
             "GIT_SHA",
             currentGitSha().asKotlinStringLiteral(),
         )
+        // Lewis Melody 自建后端：地址是公开的，口令只在这里注入一次，
+        // 首次使用时换成一枚 api 令牌存进加密偏好，之后不再用口令。
+        // 只是登录页里的默认地址提示；口令不再进 APK —— 用户在 App 内登录换 API 令牌。
+        buildConfigField(
+            "String",
+            "MELODY_BASE_URL",
+            providers.gradleProperty("melodyBaseUrl").getOrElse("https://dash.ranlewis.us.ci").asKotlinStringLiteral(),
+        )
         // 方向锁总开关（默认 false = 锁竖屏，与 MeloX 主线一致）。
         // true 的变体（目前只有 debugPerf）会解除应用内横竖屏限制：
         //   · Manifest 的 MainActivity 不再写 portrait（改由 src/debugPerf/AndroidManifest.xml 覆盖）
