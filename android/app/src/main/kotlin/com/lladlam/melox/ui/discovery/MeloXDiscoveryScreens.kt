@@ -1315,6 +1315,9 @@ private fun HomeGreetingHeader(account: HomeAccountUi?, modifier: Modifier = Mod
             fontWeight = FontWeight.Bold,
             letterSpacing = (-0.8).sp,
             color = MaterialTheme.colorScheme.onBackground,
+            // 昵称可能很长（或用户自己填的），两行封顶后省略，别把下面的区块顶出屏幕。
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
