@@ -43,7 +43,7 @@ internal class LewisMelodyClient(
             .addQueryParameter("offset", offset.toString())
             .addQueryParameter("total", "true")
             .build()
-        return dataObject(Request.Builder().url(url).get())
+        return dataObject(Request.Builder().url(url).get().build())
     }
 
     // ---- 歌曲 ----------------------------------------------------------------
@@ -108,13 +108,13 @@ internal class LewisMelodyClient(
     // ---- 歌单 ----------------------------------------------------------------
 
     fun userPlaylists(): JSONArray =
-        dataArray(Request.Builder().url(endpoint("api/melody/playlist/user").build()).get())
+        dataArray(Request.Builder().url(endpoint("api/melody/playlist/user").build()).get().build())
 
     fun playlistDetail(playlistId: Long): JSONObject {
         val url = endpoint("api/melody/playlist/detail")
             .addQueryParameter("playlistId", playlistId.toString())
             .build()
-        return dataObject(Request.Builder().url(url).get())
+        return dataObject(Request.Builder().url(url).get().build())
     }
 
     fun addTracksToPlaylist(playlistId: Long, trackIds: List<Long>) {
@@ -134,18 +134,18 @@ internal class LewisMelodyClient(
     // ---- 专辑 / 歌手 ----------------------------------------------------------
 
     fun albumDetail(albumId: Long): JSONObject =
-        dataObject(Request.Builder().url(endpoint("api/melody/album/$albumId").build()).get())
+        dataObject(Request.Builder().url(endpoint("api/melody/album/$albumId").build()).get().build())
 
     fun artistAlbums(artistId: Long, limit: Int, offset: Int): JSONObject {
         val url = endpoint("api/melody/album/artist/$artistId")
             .addQueryParameter("limit", limit.toString())
             .addQueryParameter("offset", offset.toString())
             .build()
-        return dataObject(Request.Builder().url(url).get())
+        return dataObject(Request.Builder().url(url).get().build())
     }
 
     fun artistDetail(artistId: Long): JSONObject =
-        dataObject(Request.Builder().url(endpoint("api/melody/artist/v1/$artistId").build()).get())
+        dataObject(Request.Builder().url(endpoint("api/melody/artist/v1/$artistId").build()).get().build())
 
     // ---- 歌词 ----------------------------------------------------------------
 
@@ -153,14 +153,14 @@ internal class LewisMelodyClient(
         val url = endpoint("api/melody/lyric")
             .addQueryParameter("id", songId.toString())
             .build()
-        return dataObject(Request.Builder().url(url).get())
+        return dataObject(Request.Builder().url(url).get().build())
     }
 
     // ---- 账号 / 登录 ---------------------------------------------------------
 
     /** `GET /api/melody/auth/nuser/account/get` → `{ account, profile }`。 */
     fun account(): JSONObject = dataObject(
-        Request.Builder().url(endpoint("api/melody/auth/nuser/account/get").build()).get(),
+        Request.Builder().url(endpoint("api/melody/auth/nuser/account/get").build()).get().build(),
     )
 
     fun accountSummary(): MusicAccountSummary? {
