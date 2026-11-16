@@ -52,8 +52,8 @@ import kotlinx.coroutines.withContext
 fun LewisMelodyLoginScreen(onDismiss: () -> Unit, onLoggedIn: () -> Unit) {
     val context = LocalContext.current.applicationContext
     val client = remember { LewisMelodyClient(context, MeloXHttpClient.shared) }
-    val existing = remember { LewisMelodySessionStore.read(context) }
-    var baseUrl by remember { mutableStateOf(existing.baseUrl) }
+    // 默认地址来自上次保存的会话，没有就退回构建期注入的地址，用户直接输密码即可。
+    var baseUrl by remember { mutableStateOf(LewisMelodySessionStore.read(context).effectiveBaseUrl) }
     var password by remember { mutableStateOf("") }
     var token by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -151,20 +151,14 @@ fun LewisMelodyLoginScreen(onDismiss: () -> Unit, onLoggedIn: () -> Unit) {
                 scope.launch {
                     runCatching {
                         withContext(Dispatchers.IO) {
-                            LewisMelodySessionStore.updateBaseUrl(context, baseUrl)
-                            LewisMelodySessionStore.save(
-                                context,
-                                existing.copy(baseUrl = baseUrl.trim().trimEnd('/'), token = token.trim()),
-                            )
-                            // 立刻验证这枚令牌：存下一个用不了的令牌，只会在搜索时变成一个莫名的失败。
-                            client.refreshAccount() ?: error("令牌无效或服务器地址不可达")
+                            // 存之前先验一次：一个用不了的令牌只会让下一次搜索变成一个莫名的失败。
+                            client.useToken(token, baseUrl)
                         }
                     }.onSuccess {
                         busy = false
                         onLoggedIn()
                     }.onFailure { failure ->
                         busy = false
-                        LewisMelodySessionStore.clear(context)
                         error = failure.message ?: "令牌无效"
                     }
                 }

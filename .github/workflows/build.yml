@@ -46,9 +46,25 @@ jobs:
 
       - name: Build debug APK
         run: |
+          set -o pipefail
           chmod +x android/gradlew
           cd android
-          ./gradlew :app:assembleDebug --no-daemon --max-workers=2 --stacktrace
+          ./gradlew :app:assembleDebug --no-daemon --max-workers=2 --console=plain --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
+
+      # Actions 的原始日志要仓库权限才能下载，release 资产不用登录就能取。
+      # 失败时把 Gradle 日志挂到 dev-latest，下次排查直接下载这一个文件即可。
+      - name: Publish build failure log
+        if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LOG="$RUNNER_TEMP/build.log"
+          [ -f "$LOG" ] || echo "no gradle log was produced" > "$LOG"
+          gh release view dev-latest --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 \
+            || gh release create dev-latest --repo "${GITHUB_REPOSITORY}" \
+                 --prerelease --title "Development build" \
+                 --notes "Rolling debug build, overwritten on every push to main."
+          gh release upload dev-latest "$LOG" --clobber --repo "${GITHUB_REPOSITORY}"
 
       # A release asset downloads without a GitHub login, unlike an Actions artifact.
       # The fixed tag and fixed file name mean every build replaces the same file, so
